@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homens × Mulheres no Mercado de Trabalho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+/* Layout: uma "tela" por seção, como slides, com navegação por teclado e pontos laterais.
+   Mundo visual único (claro) com capa e conclusão escuras; laranja = mulheres, azul = homens,
+   verde = Brasil, violeta = Chile. */
+:root {
+  color-scheme: light;
+  --paper: #f6f5f2;
+  --surface: #ffffff;
+  --ink: #16181d;
+  --ink-2: #4b4f58;
+  --muted: #767b85;
+  --line: #e4e2dc;
+  --grid: #e8e6e0;
+  --axis: #c3c2b7;
+  --night: #15171c;
+  --night-ink: #f2f1ee;
+  --night-2: #b4b7bf;
+  --accent-ink: #b5461b;
+  --mulheres: #eb6834;
+  --homens: #2a78d6;
+  --brasil: #008300;
+  --chile: #6250d6;
+  --good: #0ca30c;
+  --good-ink: #006300;
+  --critical: #d03b3b;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-snap-type: y proximity; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.125rem/1.65 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--homens); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- barra superior, progresso e pontos ---------- */
+.progress { position: fixed; inset: 0 auto auto 0; height: 4px; width: 0; background: var(--mulheres); z-index: 40; }
+.topbar {
+  position: fixed; inset: 0 0 auto 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px clamp(16px, 3vw, 32px);
+  font-size: .85rem; color: var(--ink-2);
+  pointer-events: none;
+  transition: color .25s;
+}
+.topbar > * { pointer-events: auto; }
+body.on-dark .topbar { color: var(--night-2); }
+.topbar .brand { font-weight: 700; letter-spacing: .02em; }
+.topbar .brand b { color: var(--accent-ink); }
+body.on-dark .topbar .brand b { color: var(--mulheres); }
+.topbar .right { display: flex; align-items: center; gap: 14px; }
+.counter { font-variant-numeric: tabular-nums; }
+.btn-ghost {
+  font: inherit; font-size: .82rem; color: inherit; cursor: pointer;
+  background: transparent; border: 1px solid currentColor; border-radius: 999px;
+  padding: 5px 12px; opacity: .85;
+}
+.btn-ghost:hover { opacity: 1; }
+
+.dots {
+  position: fixed; right: clamp(10px, 1.6vw, 22px); top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 12px; z-index: 30;
+}
+.dots a {
+  display: block; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--axis); position: relative; transition: transform .2s, background .2s;
+}
+.dots a.on { background: var(--mulheres); transform: scale(1.35); }
+.dots a span {
+  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+  background: var(--ink); color: #fff; font-size: .78rem; line-height: 1;
+  padding: 6px 9px; border-radius: 6px; white-space: nowrap;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+}
+.dots a:hover span, .dots a:focus-visible span { opacity: 1; }
+.hint {
+  position: fixed; right: clamp(16px, 3vw, 32px); bottom: 16px; z-index: 30;
+  font-size: .8rem; color: var(--muted); transition: opacity .6s;
+}
+.hint kbd {
+  font: inherit; font-size: .75rem; border: 1px solid var(--axis); border-bottom-width: 2px;
+  border-radius: 4px; padding: 0 5px; margin: 0 1px;
+}
+body.on-dark .hint { color: var(--night-2); }
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px;
+  font-size: .9rem; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.toast.show { opacity: 1; }
+
+/* ---------- seções ---------- */
+.slide {
+  min-height: 100vh;
+  padding: clamp(80px, 11vh, 120px) clamp(20px, 6vw, 96px) clamp(64px, 9vh, 96px);
+  display: grid; grid-template-columns: minmax(0, 1fr); align-content: center;
+  scroll-snap-align: start;
+  position: relative;
+}
+.slide.alt { background: var(--surface); }
+.slide.dark { background: var(--night); color: var(--night-ink); }
+.wrap { width: 100%; max-width: 1180px; margin: 0 auto; }
+
+.eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-size: .8rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin: 0;
+}
+.eyebrow .num { color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.dark .eyebrow { color: var(--night-2); }
+.dark .eyebrow .num { color: var(--mulheres); }
+
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h2 {
+  font-weight: 700; font-size: clamp(2rem, 4.2vw, 3.3rem); line-height: 1.06;
+  letter-spacing: -.02em; margin: .45em 0 .7em;
+}
+h3 { font-weight: 700; font-size: 1.3rem; line-height: 1.2; letter-spacing: -.01em; }
+.prose p { max-width: 64ch; margin: 0 0 1em; }
+.prose p:last-child { margin-bottom: 0; }
+mark { background: rgba(235, 104, 52, .17); color: inherit; padding: 0 .15em; border-radius: 3px; }
+
+.two { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(32px, 5vw, 72px); align-items: start; }
+.two.wide-right { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+.stack { display: grid; gap: 16px; }
+
+details.fontes { margin-top: 28px; font-size: .88rem; color: var(--ink-2); max-width: 64ch; }
+details.fontes summary {
+  cursor: pointer; font-weight: 700; color: var(--muted); list-style: none;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+details.fontes summary::-webkit-details-marker { display: none; }
+details.fontes summary::before { content: "+"; display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--axis); border-radius: 50%; font-size: .8rem; line-height: 1; }
+details.fontes[open] summary::before { content: "−"; }
+details.fontes ul { margin: 10px 0 0; padding-left: 1.1em; }
+details.fontes li { margin: 3px 0; }
+.dark details.fontes, .dark details.fontes summary { color: var(--night-2); }
+
+/* ---------- capa ---------- */
+.cover h1 {
+  font-weight: 800; font-size: clamp(2.6rem, 7vw, 5.6rem); line-height: .98;
+  letter-spacing: -.035em; margin: .35em 0 .25em; max-width: 14ch;
+}
+.cover h1 .x { color: var(--mulheres); }
+.cover .kicker { font-size: clamp(1.1rem, 1.8vw, 1.4rem); color: var(--night-2); margin: 0 0 clamp(32px, 6vh, 56px); max-width: 48ch; }
+.hero-fig {
+  display: grid; gap: 14px; max-width: 760px;
+  padding: 24px 26px; border: 1px solid rgba(255, 255, 255, .12); border-radius: var(--radius);
+  background: rgba(255, 255, 255, .03);
+}
+.hero-fig .lead { margin: 0 0 4px; font-size: 1.05rem; color: var(--night-ink); }
+.hero-row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 14px; }
+.hero-row .who { font-size: .95rem; color: var(--night-2); }
+.hero-bar { height: 34px; border-radius: 0 6px 6px 0; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; animation: grow 1.1s cubic-bezier(.2, .7, .2, 1) both; transform-origin: left; }
+.hero-bar.h { background: #3987e5; width: 100%; }
+.hero-bar.m { background: var(--mulheres); width: 78.69%; color: #16181d; }
+@keyframes grow { from { transform: scaleX(.08); } to { transform: scaleX(1); } }
+.hero-fig .src { font-size: .8rem; color: var(--night-2); margin: 4px 0 0; }
+.cover-meta { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 28px; font-size: .9rem; color: var(--night-2); }
+.cover-meta b { color: var(--night-ink); font-weight: 700; }
+.start {
+  margin-top: 28px; display: inline-flex; align-items: center; gap: 10px;
+  font: 700 1rem var(--font-body); color: var(--night); background: var(--night-ink);
+  border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer;
+}
+.start:hover { background: #fff; }
+
+/* ---------- linha do tempo ---------- */
+.timeline { list-style: none; margin: 0 0 28px; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); position: relative; }
+.timeline::before { content: ""; position: absolute; left: 12px; right: 12px; top: 11px; height: 2px; background: var(--line); }
+.timeline li { position: relative; }
+.timeline button {
+  all: unset; cursor: pointer; display: grid; gap: 4px; padding: 0 12px 0 0; width: 100%;
+}
+.timeline button:focus-visible { outline: 3px solid var(--homens); outline-offset: 4px; border-radius: 6px; }
+.timeline .pin { width: 24px; height: 24px; border-radius: 50%; background: var(--surface); border: 2px solid var(--axis); position: relative; z-index: 1; margin-bottom: 8px; transition: border-color .2s, background .2s; }
+.timeline .when { font-size: .8rem; color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.timeline .what { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; line-height: 1.2; color: var(--ink-2); }
+.timeline button[aria-selected="true"] .pin { border-color: var(--mulheres); background: var(--mulheres); box-shadow: 0 0 0 5px rgba(235, 104, 52, .18); }
+.timeline button[aria-selected="true"] .what { color: var(--ink); }
+.timeline button:hover .what { color: var(--ink); }
+.tl-panel { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 40px; align-items: start; min-height: 250px; }
+.tl-panel .prose p { font-size: 1.2rem; line-height: 1.7; }
+.tl-side { display: grid; gap: 14px; }
+.tl-step { font-family: var(--font-display); font-weight: 800; font-size: 4.2rem; line-height: 1; color: var(--line); font-variant-numeric: tabular-nums; }
+.law { border-left: 3px solid var(--mulheres); padding: 4px 0 4px 14px; font-size: .95rem; color: var(--ink-2); }
+.law b { display: block; color: var(--ink); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+.tl-nav { display: flex; gap: 10px; }
+.btn {
+  font: 700 .92rem var(--font-body); cursor: pointer; border-radius: 999px; padding: 9px 16px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--axis);
+}
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn:disabled { opacity: .4; cursor: default; }
+
+/* ---------- blocos de números ---------- */
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; display: grid; gap: 10px; }
+.slide.alt .tile { background: var(--paper); }
+.tile .label { font-size: .95rem; color: var(--ink-2); margin: 0; }
+.tile .value { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.2rem, 3.6vw, 2.9rem); line-height: 1; letter-spacing: -.02em; margin: 0; }
+.tile .value small { font-family: var(--font-body); font-size: 1rem; font-weight: 400; color: var(--ink-2); letter-spacing: 0; margin-left: 6px; }
+.tile .src { font-size: .78rem; color: var(--muted); margin: 0; }
+.mini { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px 12px; font-size: .9rem; }
+.mini-row { display: contents; }
+.mini-row .lbl { color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.mini-row .lbl i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.mini-track { height: 14px; background: var(--grid); border-radius: 0 4px 4px 0; }
+.mini-fill { height: 100%; border-radius: 0 4px 4px 0; }
+.mini-row .v { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- gráficos ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(16px, 2.4vw, 26px); }
+.slide.alt .panel { background: var(--surface); border-color: var(--line); box-shadow: 0 1px 0 rgba(0,0,0,.02); }
+.panel-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 20px; margin-bottom: 14px; }
+.panel-head h3 { max-width: 34ch; }
+.panel-head .sub { margin: 4px 0 0; font-size: .9rem; color: var(--ink-2); }
+.seg { display: inline-flex; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 3px; flex-shrink: 0; }
+.seg button { border: 0; background: transparent; font: 700 .85rem var(--font-body); color: var(--ink-2); padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.legend[hidden] { display: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .9rem; color: var(--ink-2); margin: 0 0 6px; padding: 0; list-style: none; }
+.legend li { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { display: inline-block; width: 16px; height: 4px; border-radius: 2px; }
+.legend i.sq { width: 12px; height: 12px; border-radius: 3px; }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; overflow: visible; }
+.chart svg text { font-family: var(--font-body); }
+.chart .tick { fill: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.chart .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .base { stroke: var(--axis); stroke-width: 1; }
+.chart .vlabel { fill: var(--ink); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chart .nlabel { fill: var(--ink-2); font-size: 13px; }
+.chart .vlabel, .chart .nlabel, .chart .note { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.chart .glabel { fill: var(--ink); font-size: 14px; font-weight: 700; }
+.chart .note { fill: var(--muted); font-size: 12.5px; }
+.chart .hit { fill: transparent; cursor: crosshair; }
+.chart .hit:focus { outline: none; }
+.chart .hit:focus-visible { stroke: var(--homens); stroke-width: 2; }
+.tip {
+  position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5;
+  background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 11px;
+  font-size: .85rem; line-height: 1.45; white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .18); opacity: 0; transition: opacity .12s;
+}
+.tip.show { opacity: 1; }
+.tip b { display: block; font-size: .8rem; color: #c9ccd3; font-weight: 700; margin-bottom: 2px; }
+.tip .r { display: flex; align-items: center; gap: 7px; font-variant-numeric: tabular-nums; }
+.tip .r i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.tip .r em { font-style: normal; margin-left: auto; padding-left: 14px; font-weight: 700; }
+.tip .x { border-top: 1px solid rgba(255,255,255,.18); margin-top: 4px; padding-top: 4px; color: #e6e7ea; }
+.caption { font-size: .8rem; color: var(--muted); margin: 12px 0 0; line-height: 1.5; }
+.datatoggle { margin-top: 10px; font: 700 .82rem var(--font-body); color: var(--ink-2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.tablebox { max-height: 280px; overflow: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; }
+.tablebox[hidden] { display: none; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 12px; text-align: right; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+thead th { position: sticky; top: 0; background: var(--paper); font-weight: 700; color: var(--ink-2); }
+
+/* ---------- ficha estatística ---------- */
+.ficha { display: grid; gap: 0; }
+.ficha dl { margin: 0; display: grid; gap: 12px; }
+.ficha dt { font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+.ficha dd { margin: 2px 0 0; font-size: .95rem; line-height: 1.5; color: var(--ink); }
+.measures { margin-top: 18px; }
+.measures table { font-size: .92rem; }
+.measures td, .measures th { padding: 7px 10px; }
+.measures thead th { background: var(--paper); }
+.measures .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+.insight { margin: 14px 0 0; font-size: .95rem; padding: 12px 14px; background: var(--paper); border-radius: 10px; }
+details.howto { margin-top: 12px; font-size: .9rem; }
+details.howto summary { cursor: pointer; font-weight: 700; color: var(--ink-2); }
+details.howto ul { margin: 8px 0 0; padding-left: 1.1em; color: var(--ink-2); }
+details.howto code { font-family: var(--font-body); font-weight: 700; color: var(--ink); }
+.stat-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+
+/* ---------- ENEM ---------- */
+.enem-tag { display: inline-flex; gap: 8px; align-items: center; font-size: .8rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); color: var(--ink-2); }
+.enem-q p { max-width: 62ch; }
+.alts { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.opt {
+  width: 100%; display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 12px;
+  font: 400 1.1rem var(--font-body); text-align: left; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--axis); border-radius: 12px; padding: 10px 14px; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.opt:hover { border-color: var(--ink); }
+.opt .letter { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--paper); font-weight: 700; }
+.opt .verdict { font-size: .85rem; font-weight: 700; }
+.opt.right { border-color: var(--good); box-shadow: inset 0 0 0 1px var(--good); }
+.opt.right .letter { background: var(--good); color: #fff; }
+.opt.right .verdict { color: var(--good-ink); }
+.opt.wrong { border-color: var(--critical); }
+.opt.wrong .letter { background: var(--critical); color: #fff; }
+.opt.wrong .verdict { color: var(--critical); }
+.resol { margin-top: 18px; }
+.resol[hidden] { display: none; }
+.resol h3 { font-size: 1.1rem; margin-bottom: 8px; }
+.resol p { margin: 8px 0 0; font-size: .98rem; }
+.resol table { margin-top: 8px; }
+.resol .total td { font-weight: 700; border-bottom: 0; }
+.calc { margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: var(--paper); font-size: 1.05rem; }
+.calc b { font-family: var(--font-display); font-size: 1.35rem; }
+
+/* ---------- conclusão e referências ---------- */
+.recap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: clamp(28px, 5vh, 44px); }
+.recap div { border-top: 2px solid rgba(255, 255, 255, .2); padding-top: 14px; }
+.recap b { display: block; font-family: var(--font-display); font-weight: 800; font-size: clamp(2rem, 4vw, 3rem); line-height: 1; color: var(--night-ink); }
+.recap span { display: block; margin-top: 8px; font-size: .92rem; color: var(--night-2); line-height: 1.45; }
+.dark .prose p { color: #dcdde1; }
+.refs { columns: 2 340px; column-gap: 48px; }
+.refs section { break-inside: avoid; margin-bottom: 22px; }
+.refs h3 { font-size: 1rem; margin-bottom: 6px; color: var(--accent-ink); letter-spacing: .02em; }
+.refs ul { margin: 0; padding-left: 1.1em; font-size: .9rem; color: var(--ink-2); }
+.refs li { margin: 4px 0; }
+.foot { margin-top: 32px; font-size: .85rem; color: var(--muted); }
+
+/* ---------- responsivo ---------- */
+@media (max-width: 960px) {
+  .two, .two.wide-right, .stat-grid { grid-template-columns: 1fr; }
+  .tl-panel { grid-template-columns: 1fr; gap: 20px; }
+  .tl-step { display: none; }
+}
+@media (max-width: 760px) {
+  body { font-size: 1.05rem; }
+  .slide { min-height: auto; padding: 84px 18px 56px; }
+  html { scroll-snap-type: none; }
+  .dots, .hint { display: none; }
+  .timeline { grid-template-columns: repeat(2, 1fr); row-gap: 18px; }
+  .timeline::before { display: none; }
+  .recap { grid-template-columns: 1fr; }
+  .tl-panel .prose p { font-size: 1.08rem; }
+  .topbar .brand { display: none; }
+  .topbar { justify-content: flex-end; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(6px); }
+  body.on-dark .topbar { background: color-mix(in srgb, var(--night) 88%, transparent); }
+}
+</style>
+</head>
+<body class="on-dark">
+
+<div class="progress" id="progress"></div>
+<header class="topbar">
+  <div class="brand">Tema 4 <b>·</b> Homens × Mulheres no mercado de trabalho</div>
+  <div class="right">
+    <span class="counter" id="counter">01 / 11</span>
+    <button class="btn-ghost" id="fs" type="button">Tela cheia</button>
+  </div>
+</header>
+<nav class="dots" id="dots" aria-label="Seções"></nav>
+<div class="hint" id="hint">Use <kbd>←</kbd> <kbd>→</kbd> para trocar de tela</div>
+<div class="toast" id="toast" role="status"></div>
+
+<main>
+
+<!-- CAPA -->
+<section class="slide dark cover" id="inicio" data-label="Início">
+  <div class="wrap">
+    <p class="eyebrow"><span class="num">Tema 4</span> Distribuição de renda · Estatística</p>
+    <h1>Homens <span class="x">×</span> mulheres no mercado de trabalho</h1>
+    <p class="kicker">Como a renda se distribui entre homens e mulheres no Brasil e no Chile, contada em dados e gráficos.</p>
+
+    <figure class="hero-fig" aria-label="A cada 100 reais recebidos por um homem, uma mulher recebe 78 reais e 69 centavos">
+      <p class="lead">A cada <b>R$ 100</b> que um homem recebe, uma mulher recebe <b>R$ 78,69</b>.</p>
+      <div class="hero-row"><span class="who">Homens</span><div class="hero-bar h">R$ 100,00</div></div>
+      <div class="hero-row"><span class="who">Mulheres</span><div class="hero-bar m">R$ 78,69</div></div>
+      <p class="src">Remuneração média em empresas privadas com 100 ou mais empregados: R$ 3.965,94 (mulheres) e R$ 5.039,68 (homens). Fonte: MTE, 5º Relatório de Transparência Salarial (abr/2026).</p>
+    </figure>
+
+    <div class="cover-meta">
+      <span><b>CEM 05 Taguatinga</b></span>
+      <span>Trabalho de Matemática · 4º bimestre · 2º ano</span>
+      <span>Professor Gabriel Felipe</span>
+    </div>
+    <button class="start" type="button" data-go="1">Começar →</button>
+  </div>
+</section>
+
+<!-- 01 CONCEITO -->
+<section class="slide" id="conceito" data-label="Conceito">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow"><span class="num">01</span> Conceito</p>
+      <h2>O que é desigualdade de renda?</h2>
+    </div>
+    <div class="prose">
+      <p>A desigualdade de renda é um problema socioeconômico caracterizado pela <mark>distribuição desigual dos ganhos financeiros</mark> entre os indivíduos de uma sociedade. Isso significa que, enquanto uma pequena parcela da população concentra uma grande quantidade de dinheiro e patrimônio, muitas outras pessoas recebem rendimentos menores e possuem menos recursos para garantir suas necessidades básicas. Essa diferença pode ser observada nos salários, nos lucros, nas aposentadorias e em outras fontes de renda.</p>
+      <p>A desigualdade de renda também influencia diretamente as condições de vida da população, pois pessoas com rendimentos mais baixos podem enfrentar maiores dificuldades para ter acesso à alimentação adequada, moradia, saúde, educação e outros direitos fundamentais. Dessa forma, a concentração de renda dificulta a <mark>mobilidade social</mark>, ou seja, a possibilidade de uma pessoa melhorar suas condições econômicas ao longo da vida.</p>
+      <p>No Brasil, a desigualdade de renda possui <mark>raízes históricas</mark> e está relacionada à formação social e econômica do país, marcada pela escravidão, pela concentração de terras e pelas diferenças de oportunidades entre os grupos sociais. Embora tenham ocorrido avanços ao longo dos anos, o problema ainda representa um dos grandes desafios para a construção de uma sociedade mais justa e igualitária.</p>
+      <details class="fontes">
+        <summary>Fontes</summary>
+        <ul>
+          <li>IBGE — Instituto Brasileiro de Geografia e Estatística: Síntese de Indicadores Sociais.</li>
+          <li>IPEA — Instituto de Pesquisa Econômica Aplicada: Desigualdade de renda no Brasil: uma análise da queda recente.</li>
+          <li>IPEA — Pobreza e desigualdade no Brasil no curto e no longo prazo (2025).</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- 02 HISTÓRIA -->
+<section class="slide alt" id="historia" data-label="História">
+  <div class="wrap">
+    <p class="eyebrow"><span class="num">02</span> Histórico e evolução</p>
+    <h2>Como as mulheres chegaram ao mercado de trabalho</h2>
+
+    <ol class="timeline" role="tablist" aria-label="Etapas da história">
+      <li><button role="tab" id="tl-0" aria-selected="true" aria-controls="tl-panel" data-step="0"><span class="pin"></span><span class="when">Até o séc. XVIII</span><span class="what">Trabalho sem reconhecimento</span></button></li>
+      <li><button role="tab" id="tl-1" aria-selected="false" aria-controls="tl-panel" data-step="1"><span class="pin"></span><span class="when">Séc. XVIII ao início do XX</span><span class="what">Fábricas e indústria</span></button></li>
+      <li><button role="tab" id="tl-2" aria-selected="false" aria-controls="tl-panel" data-step="2"><span class="pin"></span><span class="when">Anos 1970 a 1988</span><span class="what">Crescimento e direitos</span></button></li>
+      <li><button role="tab" id="tl-3" aria-selected="false" aria-controls="tl-panel" data-step="3"><span class="pin"></span><span class="when">Hoje</span><span class="what">As desigualdades continuam</span></button></li>
+    </ol>
+
+    <div class="tl-panel" id="tl-panel" role="tabpanel" aria-live="polite">
+      <div class="prose" id="tl-text"></div>
+      <div class="tl-side">
+        <div class="tl-step" id="tl-num">1/4</div>
+        <div id="tl-extra"></div>
+        <div class="tl-nav">
+          <button class="btn" type="button" id="tl-prev">← Anterior</button>
+          <button class="btn primary" type="button" id="tl-next">Próximo →</button>
+        </div>
+      </div>
+    </div>
+
+    <details class="fontes">
+      <summary>Fontes</summary>
+      <ul>
+        <li>Constituição Federal de 1988, artigo 5º, inciso I.</li>
+        <li>IPEA: Participação feminina no mercado de trabalho brasileiro.</li>
+        <li>Universidade Federal do Rio Grande (FURG): Avanços e retrocessos da participação feminina no mercado de trabalho brasileiro.</li>
+        <li>SciELO: Evolução do emprego feminino no mercado de trabalho brasileiro.</li>
+        <li>Câmara dos Deputados: Mulheres no mercado de trabalho: desigualdades e avanços.</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<!-- 03 BRASIL -->
+<section class="slide" id="brasil" data-label="Brasil">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow"><span class="num">03</span> Brasil</p>
+      <h2>A realidade brasileira</h2>
+      <div class="prose">
+        <p>Um dos principais problemas é a <mark>desigualdade salarial</mark>. Mesmo quando possuem formação e exercem funções semelhantes, as mulheres frequentemente recebem menos do que os homens. Além disso, muitas enfrentam dificuldades para conciliar a vida profissional com as responsabilidades domésticas e familiares, que ainda recaem de maneira desproporcional sobre elas. Essa sobrecarga pode limitar suas oportunidades de crescimento profissional e até dificultar sua permanência no mercado de trabalho.</p>
+        <p>As desigualdades também são maiores quando se considera a questão racial. As mulheres negras enfrentam mais dificuldades para conseguir emprego e alcançar melhores remunerações, demonstrando que o preconceito de gênero e o racismo podem atuar juntos, tornando sua inserção profissional ainda mais difícil.</p>
+        <p>Dessa forma, a realidade brasileira mostra que, embora as mulheres tenham conquistado maior espaço no mercado de trabalho, a igualdade profissional ainda não foi alcançada.</p>
+      </div>
+      <details class="fontes">
+        <summary>Fontes</summary>
+        <ul>
+          <li>Ministério das Mulheres: Relatório Anual Socioeconômico da Mulher (RASEAM 2026).</li>
+          <li>Ministério do Trabalho e Emprego: 5º Relatório de Transparência Salarial (2026).</li>
+          <li>Ministério do Trabalho e Emprego: 4º Relatório de Transparência Salarial (2025).</li>
+          <li>Ministério do Trabalho e Emprego: Desafios da mulher no mercado de trabalho: desigualdade de gênero e racismo persistem.</li>
+          <li>DIEESE: Mulheres: inserção no mercado de trabalho.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="stack">
+      <div class="tile">
+        <p class="label">Taxa de participação na força de trabalho (2024)</p>
+        <div class="mini">
+          <div class="mini-row"><span class="lbl"><i style="background:var(--mulheres)"></i>Mulheres</span><div class="mini-track"><div class="mini-fill" style="width:53.5%;background:var(--mulheres)"></div></div><span class="v">53,5%</span></div>
+          <div class="mini-row"><span class="lbl"><i style="background:var(--homens)"></i>Homens</span><div class="mini-track"><div class="mini-fill" style="width:72.8%;background:var(--homens)"></div></div><span class="v">72,8%</span></div>
+        </div>
+        <p class="src">Fonte: Ministério das Mulheres, RASEAM 2026.</p>
+      </div>
+      <div class="tile">
+        <p class="label">Quanto as mulheres recebem a menos, em média</p>
+        <p class="value">21,3%<small>empresas privadas com 100+ empregados</small></p>
+        <p class="src">Fonte: MTE, 5º Relatório de Transparência Salarial (abr/2026).</p>
+      </div>
+      <div class="tile">
+        <p class="label">Mulheres negras × homens não negros (remuneração média)</p>
+        <p class="value">53,3%<small>a menos</small></p>
+        <div class="mini">
+          <div class="mini-row"><span class="lbl"><i style="background:var(--mulheres)"></i>Mulheres negras</span><div class="mini-track"><div class="mini-fill" style="width:46.7%;background:var(--mulheres)"></div></div><span class="v">R$ 2.986,50</span></div>
+          <div class="mini-row"><span class="lbl"><i style="background:var(--homens)"></i>Homens não negros</span><div class="mini-track"><div class="mini-fill" style="width:100%;background:var(--homens)"></div></div><span class="v">R$ 6.391,94</span></div>
+        </div>
+        <p class="src">Fonte: MTE, 4º Relatório de Transparência Salarial (nov/2025).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 BRASIL EM DADOS -->
+<section class="slide alt" id="salarios" data-label="Salários no Brasil">
+  <div class="wrap">
+    <p class="eyebrow"><span class="num">04</span> Brasil em dados</p>
+    <h2>A diferença salarial aumentou a cada relatório</h2>
+    <div class="two wide-right">
+      <div class="prose">
+        <p>Segundo o Relatório Anual Socioeconômico da Mulher (RASEAM 2026), em 2024, a taxa de participação feminina na força de trabalho brasileira foi de <mark>53,5%</mark>, enquanto a masculina chegou a <mark>72,8%</mark>.</p>
+        <p>Além disso, o 5º Relatório de Transparência Salarial, divulgado em abril de 2026 pelo Ministério do Trabalho e Emprego, apontou que as mulheres recebiam, em média, <mark>21,3% menos</mark> que os homens nas empresas privadas com 100 ou mais funcionários.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3 id="br-title">Diferença salarial entre homens e mulheres</h3>
+            <p class="sub" id="br-sub">Quanto as mulheres recebem a menos, em %, em cada relatório</p>
+          </div>
+          <div class="seg" role="group" aria-label="Escolher visualização">
+            <button type="button" aria-pressed="true" data-view="gap">Diferença (%)</button>
+            <button type="button" aria-pressed="false" data-view="brl">Valores (R$)</button>
+          </div>
+        </div>
+        <ul class="legend" id="br-legend" hidden>
+          <li><i style="background:var(--homens)"></i>Homens</li>
+          <li><i style="background:var(--mulheres)"></i>Mulheres</li>
+        </ul>
+        <div class="chart" id="chart-br-gap"></div>
+        <div class="chart" id="chart-br-brl" hidden></div>
+        <p class="caption">Empresas privadas com 100 ou mais empregados. O 1º relatório não divulgou as médias em reais na mesma forma. Fonte: MTE, 1º ao 5º Relatório de Transparência Salarial e de Critérios Remuneratórios (2024–2026).</p>
+        <button class="datatoggle" type="button" data-table="tbl-br">Ver dados em tabela</button>
+        <div class="tablebox" id="tbl-br" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 CHILE -->
+<section class="slide" id="chile" data-label="Chile">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow"><span class="num">05</span> Chile</p>
+      <h2>E no Chile?</h2>
+      <div class="prose">
+        <p>No Chile, a participação das mulheres no mercado de trabalho tem aumentado ao longo dos anos, resultado de avanços na educação, mudanças sociais e maior busca por independência financeira. Entretanto, assim como no Brasil, as mulheres chilenas ainda enfrentam desigualdades em relação aos homens, principalmente no acesso ao emprego, na remuneração e nas oportunidades de crescimento profissional.</p>
+        <p>Segundo dados do Instituto Nacional de Estatísticas do Chile (INE), em 2024, a participação feminina na força de trabalho foi de aproximadamente <mark>52,7%</mark>, enquanto a masculina chegou a <mark>71%</mark>. Esses números demonstram que ainda existe uma diferença significativa entre homens e mulheres na inserção profissional.</p>
+        <p>Outro problema importante é a desigualdade salarial. De acordo com um estudo divulgado pelo Programa das Nações Unidas para o Desenvolvimento (PNUD) e pela Organização Internacional do Trabalho (OIT), em abril de 2025, as mulheres chilenas recebiam, em média, cerca de <mark>21% menos</mark> que os homens em rendimentos mensais. Além disso, a distribuição desigual das responsabilidades domésticas e dos cuidados familiares dificulta a entrada e a permanência de muitas mulheres no mercado de trabalho.</p>
+        <p>Apesar desses desafios, o Chile tem desenvolvido estudos e políticas para ampliar a participação feminina e reduzir as desigualdades profissionais.</p>
+      </div>
+      <details class="fontes">
+        <summary>Fontes</summary>
+        <ul>
+          <li>INE — Instituto Nacional de Estatísticas do Chile: Indicadores do mercado de trabalho (2020–2024).</li>
+          <li>PNUD e OIT: Estudo sobre as barreiras à participação laboral das mulheres no Chile (2025).</li>
+          <li>OIT — Organização Internacional do Trabalho: Barreiras persistentes para a participação laboral das mulheres no Chile.</li>
+          <li>Ministério da Fazenda do Chile: Estado da Fazenda Pública 2025 — Participação feminina no mercado de trabalho.</li>
+        </ul>
+      </details>
+    </div>
+    <div class="stack">
+      <div class="tile">
+        <p class="label">Taxa de participação na força de trabalho (2024)</p>
+        <div class="mini">
+          <div class="mini-row"><span class="lbl"><i style="background:var(--mulheres)"></i>Mulheres</span><div class="mini-track"><div class="mini-fill" style="width:52.7%;background:var(--mulheres)"></div></div><span class="v">52,7%</span></div>
+          <div class="mini-row"><span class="lbl"><i style="background:var(--homens)"></i>Homens</span><div class="mini-track"><div class="mini-fill" style="width:71%;background:var(--homens)"></div></div><span class="v">71%</span></div>
+        </div>
+        <p class="src">Valores aproximados. Fonte: INE Chile, Encuesta Nacional de Empleo.</p>
+      </div>
+      <div class="tile">
+        <p class="label">Quanto as mulheres recebem a menos (rendimento mensal)</p>
+        <p class="value">21%<small>quase o dobro da média da região (11%)</small></p>
+        <p class="src">Fonte: PNUD e OIT, Barreiras persistentes para a participação laboral das mulheres no Chile (abr/2025).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 COMPARAÇÃO -->
+<section class="slide alt" id="comparacao" data-label="Comparação">
+  <div class="wrap two">
+    <div>
+      <p class="eyebrow"><span class="num">06</span> Brasil × Chile</p>
+      <h2>Semelhanças e diferenças</h2>
+      <div class="prose">
+        <p>Uma das principais semelhanças entre os países é a desigualdade salarial e a sobrecarga das responsabilidades domésticas e familiares, que ainda recaem principalmente sobre as mulheres. Essas situações dificultam o crescimento profissional feminino e contribuem para a permanência das desigualdades econômicas.</p>
+        <p>Apesar das semelhanças, existem diferenças nos indicadores dos dois países. Segundo estimativas da Organização Internacional do Trabalho (OIT), disponibilizadas pelo Banco Mundial, em 2025, a participação feminina na força de trabalho foi de aproximadamente <mark>53,4% no Brasil</mark> e <mark>52,9% no Chile</mark>. Isso demonstra que os dois países apresentam índices bastante próximos.</p>
+        <p>No Chile, a desigualdade salarial também permanece significativa. Segundo a Organização para a Cooperação e Desenvolvimento Econômico (OCDE), em 2023, a diferença entre os salários medianos de homens e mulheres que trabalhavam em período integral era de aproximadamente 15,4%. No Brasil, estudos da OCDE também apontam diferenças expressivas na remuneração entre os gêneros.</p>
+        <p>Portanto, a comparação demonstra que, apesar das diferenças históricas, econômicas e sociais, Brasil e Chile ainda compartilham um desafio importante: transformar os avanços conquistados pelas mulheres em igualdade real de oportunidades, salários e reconhecimento profissional.</p>
+      </div>
+      <details class="fontes">
+        <summary>Fontes</summary>
+        <ul>
+          <li>Banco Mundial: Indicadores de gênero do Brasil.</li>
+          <li>Banco Mundial: Participação feminina na força de trabalho — Brasil e Chile.</li>
+          <li>OCDE: Estudo sobre a participação feminina no mercado de trabalho chileno (2025).</li>
+          <li>OCDE: Gender Budgeting in Brazil (2024).</li>
+        </ul>
+      </details>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3 id="cmp-title">Participação na força de trabalho (2025)</h3>
+          <p class="sub" id="cmp-sub">% da população de 15 anos ou mais que trabalha ou procura trabalho</p>
+        </div>
+        <div class="seg" role="group" aria-label="Escolher comparação">
+          <button type="button" aria-pressed="true" data-view="part">Participação</button>
+          <button type="button" aria-pressed="false" data-view="sal">Salários</button>
+        </div>
+      </div>
+      <ul class="legend" id="cmp-legend-part">
+        <li><i class="sq" style="background:var(--mulheres)"></i>Mulheres</li>
+        <li><i class="sq" style="background:var(--homens)"></i>Homens</li>
+      </ul>
+      <ul class="legend" id="cmp-legend-sal" hidden>
+        <li><i class="sq" style="background:var(--brasil)"></i>Brasil</li>
+        <li><i class="sq" style="background:var(--chile)"></i>Chile</li>
+      </ul>
+      <div class="chart" id="chart-cmp-part"></div>
+      <div class="chart" id="chart-cmp-sal" hidden></div>
+      <p class="caption" id="cmp-cap">Estimativas modeladas da OIT, publicadas pelo Banco Mundial. A diferença em pontos percentuais (p.p.) é a taxa dos homens menos a das mulheres.</p>
+      <button class="datatoggle" type="button" data-table="tbl-cmp">Ver dados em tabela</button>
+      <div class="tablebox" id="tbl-cmp" hidden></div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 ESTATÍSTICA -->
+<section class="slide" id="estatistica" data-label="Estatística">
+  <div class="wrap">
+    <p class="eyebrow"><span class="num">07</span> Análise estatística</p>
+    <h2>Participação feminina de 1990 a 2025</h2>
+    <div class="stat-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Taxa de participação feminina na força de trabalho (%)</h3>
+            <p class="sub">Passe o mouse ou use as setas sobre o gráfico para ver cada ano</p>
+          </div>
+          <div class="seg" role="group" aria-label="Linha da média">
+            <button type="button" aria-pressed="false" id="toggle-mean">Mostrar médias</button>
+          </div>
+        </div>
+        <ul class="legend">
+          <li><i style="background:var(--brasil)"></i>Brasil</li>
+          <li><i style="background:var(--chile)"></i>Chile</li>
+        </ul>
+        <div class="chart" id="chart-serie"></div>
+        <p class="caption">Mulheres de 15 anos ou mais. Estimativas modeladas da OIT (indicador SL.TLF.CACT.FE.ZS), Banco Mundial.</p>
+        <button class="datatoggle" type="button" data-table="tbl-serie">Ver os 72 valores em tabela</button>
+        <div class="tablebox" id="tbl-serie" hidden></div>
+      </div>
+
+      <div class="ficha">
+        <dl>
+          <div><dt>Tipo de gráfico</dt><dd>Gráfico de linhas (série temporal), que mostra como um valor muda ao longo do tempo.</dd></div>
+          <div><dt>Variável</dt><dd>Taxa de participação feminina na força de trabalho: % de mulheres que trabalham ou procuram trabalho. Variável quantitativa contínua.</dd></div>
+          <div><dt>Valores</dt><dd>36 valores por país, um por ano, de 1990 a 2025.</dd></div>
+          <div><dt>População</dt><dd>Todas as mulheres com 15 anos ou mais do Brasil e do Chile.</dd></div>
+          <div><dt>Amostra</dt><dd>Domicílios entrevistados em pesquisas por amostragem (PNAD Contínua, do IBGE, e Encuesta Nacional de Empleo, do INE chileno). A OIT padroniza esses resultados para comparar os países.</dd></div>
+        </dl>
+        <div class="measures">
+          <table aria-label="Medidas de tendência central e de dispersão">
+            <thead><tr><th>Medida</th><th><span class="sw" style="background:var(--brasil)"></span>Brasil</th><th><span class="sw" style="background:var(--chile)"></span>Chile</th></tr></thead>
+            <tbody id="measures-body"></tbody>
+          </table>
+          <p class="insight" id="insight"></p>
+          <details class="howto">
+            <summary>Como calcular</summary>
+            <ul>
+              <li><code>Média</code>: soma dos 36 valores ÷ 36.</li>
+              <li><code>Mediana</code>: com os valores em ordem crescente, é a média entre o 18º e o 19º.</li>
+              <li><code>Desvio padrão</code>: √[ soma de (valor − média)² ÷ 36 ].</li>
+              <li><code>Amplitude</code>: maior valor − menor valor.</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 ENEM -->
+<section class="slide alt" id="enem" data-label="Questão do ENEM">
+  <div class="wrap">
+    <p class="eyebrow"><span class="num">08</span> Estatística no vestibular</p>
+    <h2>Questão do ENEM</h2>
+    <div class="two">
+      <div class="enem-q">
+        <span class="enem-tag">ENEM 2024 · Aplicação PPL · 2º dia · Questão 160</span>
+        <div class="prose" style="margin-top:14px">
+          <p>Apesar de a participação das mulheres no mercado de trabalho ter crescido ao longo dos anos, ainda existe uma grande diferença salarial entre homens e mulheres. Os dados do Cadastro Geral de Empregados e Desempregados (Caged) apresentados no gráfico mostram a evolução da diferença salarial de contratação, com medições feitas de dois em dois anos.</p>
+        </div>
+        <div class="panel" style="margin-top:6px">
+          <ul class="legend">
+            <li><i style="background:var(--homens)"></i>Homens</li>
+            <li><i style="background:var(--mulheres)"></i>Mulheres</li>
+          </ul>
+          <div class="chart" id="chart-enem"></div>
+          <p class="caption">Salário de contratação (R$). Gráfico redesenhado com os valores da questão.</p>
+        </div>
+        <p style="margin:16px 0 0;font-weight:700">De acordo com os dados fornecidos, qual valor mais se aproxima da diferença salarial média entre homens e mulheres nesse período?</p>
+      </div>
+      <div>
+        <ul class="alts" id="alts">
+          <li><button class="opt" type="button" data-ok="1"><span class="letter">A</span><span>121,7</span><span class="verdict"></span></button></li>
+          <li><button class="opt" type="button"><span class="letter">B</span><span>120,0</span><span class="verdict"></span></button></li>
+          <li><button class="opt" type="button"><span class="letter">C</span><span>110,5</span><span class="verdict"></span></button></li>
+          <li><button class="opt" type="button"><span class="letter">D</span><span>82,0</span><span class="verdict"></span></button></li>
+          <li><button class="opt" type="button"><span class="letter">E</span><span>65,5</span><span class="verdict"></span></button></li>
+        </ul>
+        <button class="datatoggle" type="button" id="show-resol">Mostrar resolução</button>
+        <div class="resol" id="resol" hidden>
+          <h3>Resolução: média aritmética das diferenças</h3>
+          <div class="tablebox" style="max-height:none">
+            <table>
+              <thead><tr><th>Ano</th><th>Homens</th><th>Mulheres</th><th>Diferença</th></tr></thead>
+              <tbody id="enem-body"></tbody>
+            </table>
+          </div>
+          <div class="calc">Média = 852 ÷ 7 ≈ <b>121,7</b> → alternativa <b>A</b></div>
+          <p>Relação com o tema: a diferença na contratação passou de R$ 57 em 2003 para R$ 164 em 2015, ou seja, a desigualdade aparece desde o primeiro salário.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 CONCLUSÃO -->
+<section class="slide dark" id="conclusao" data-label="Conclusão">
+  <div class="wrap">
+    <p class="eyebrow"><span class="num">09</span> Conclusão</p>
+    <h2>O que os dados mostram</h2>
+    <div class="recap">
+      <div><b>≈ 53%</b><span>das mulheres participam da força de trabalho no Brasil e no Chile, contra ≈ 72% a 73% dos homens (2025).</span></div>
+      <div><b>≈ 21%</b><span>a menos: diferença salarial média das mulheres no Brasil (MTE) e no Chile (PNUD/OIT).</span></div>
+      <div><b>2×</b><span>o desvio padrão do Chile é o dobro do brasileiro: a participação das chilenas cresceu mais desde 1990.</span></div>
+    </div>
+    <div class="prose">
+      <p>A partir das informações apresentadas, foi possível perceber que a desigualdade de renda entre homens e mulheres continua sendo um problema presente tanto no Brasil quanto no Chile. Apesar dos avanços na participação feminina no mercado de trabalho e das conquistas dos direitos das mulheres, ainda existem diferenças significativas na remuneração, nas oportunidades profissionais e no acesso a cargos de liderança.</p>
+      <p>A comparação entre os dois países demonstrou que, embora apresentem algumas diferenças em seus indicadores econômicos e sociais, ambos enfrentam desafios semelhantes para alcançar a igualdade de gênero. Os dados estatísticos utilizados também permitiram compreender melhor essas desigualdades e observar como elas afetam a vida profissional e financeira das mulheres.</p>
+      <p>Portanto, é fundamental que sejam desenvolvidas políticas públicas, oportunidades de emprego e medidas que garantam salários justos e condições iguais para homens e mulheres. Dessa forma, será possível construir um mercado de trabalho mais inclusivo, justo e igualitário.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 10 REFERÊNCIAS -->
+<section class="slide" id="referencias" data-label="Referências">
+  <div class="wrap">
+    <p class="eyebrow"><span class="num">10</span> Referências bibliográficas</p>
+    <h2>Onde pesquisamos</h2>
+    <div class="refs">
+      <section>
+        <h3>Desigualdade de renda</h3>
+        <ul>
+          <li>IBGE — Síntese de Indicadores Sociais.</li>
+          <li>IPEA — Desigualdade de renda no Brasil: uma análise da queda recente.</li>
+          <li>IPEA — Pobreza e desigualdade no Brasil no curto e no longo prazo (2025).</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Histórico</h3>
+        <ul>
+          <li>Constituição Federal de 1988, art. 5º, inciso I.</li>
+          <li>IPEA — Participação feminina no mercado de trabalho brasileiro.</li>
+          <li>FURG — Avanços e retrocessos da participação feminina no mercado de trabalho brasileiro.</li>
+          <li>SciELO — Evolução do emprego feminino no mercado de trabalho brasileiro.</li>
+          <li>Câmara dos Deputados — Mulheres no mercado de trabalho: desigualdades e avanços.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Brasil</h3>
+        <ul>
+          <li>Ministério das Mulheres — <a href="https://www.gov.br/mulheres/pt-br/central-de-conteudos/publicacoes/raseam-2026-relatorio-anual-socioeconomico-da-mulher.pdf/@@download/file">Relatório Anual Socioeconômico da Mulher (RASEAM 2026)</a>.</li>
+          <li>MTE — 1º ao 5º Relatório de Transparência Salarial e de Critérios Remuneratórios (2024–2026). Divulgação do <a href="https://agenciabrasil.ebc.com.br/economia/noticia/2026-04/emprego-feminino-aumenta-11-mas-desigualdade-salarial-persiste">5º relatório (Agência Brasil)</a>.</li>
+          <li>MTE — Desafios da mulher no mercado de trabalho: desigualdade de gênero e racismo persistem.</li>
+          <li>DIEESE — Mulheres: inserção no mercado de trabalho.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Chile</h3>
+        <ul>
+          <li>INE Chile — Indicadores do mercado de trabalho (2020–2024).</li>
+          <li>PNUD e OIT — <a href="https://www.undp.org/es/node/520436">Barreiras persistentes para a participação laboral das mulheres no Chile (2025)</a>.</li>
+          <li>Ministério da Fazenda do Chile — Estado da Fazenda Pública 2025.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Comparação e gráficos</h3>
+        <ul>
+          <li>Banco Mundial — <a href="https://data.worldbank.org/indicator/SL.TLF.CACT.FE.ZS?locations=BR-CL">Participação feminina na força de trabalho (estimativa modelada da OIT), 1990–2025</a>.</li>
+          <li>Banco Mundial — Indicadores de gênero do Brasil.</li>
+          <li>OCDE — Estudo sobre a participação feminina no mercado de trabalho chileno (2025).</li>
+          <li>OCDE — Gender Budgeting in Brazil (2024).</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Questão</h3>
+        <ul>
+          <li>INEP — Exame Nacional do Ensino Médio 2024, aplicação PPL, 2º dia, caderno azul, questão 160.</li>
+        </ul>
+      </section>
+    </div>
+    <p class="foot">CEM 05 Taguatinga · Trabalho de Matemática (Estatística) · 4º bimestre de 2026 · Professor Gabriel Felipe</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ================== dados ================== */
+  const C = {
+    mulheres: "#eb6834", homens: "#2a78d6", brasil: "#008300", chile: "#6250d6"
+  };
+  const YEARS = Array.from({ length: 36 }, (_, i) => 1990 + i);
+  const BR = [44.4, 44.5, 45.6, 46.7, 47.8, 48.9, 47.7, 48.7, 49.5, 50.8, 51.9, 53.0, 54.6, 54.8, 55.6, 56.9, 56.5, 56.3, 56.0, 56.6, 55.0, 53.5, 52.9, 52.8, 52.7, 53.3, 53.5, 54.4, 54.6, 55.3, 50.3, 52.5, 53.9, 53.2, 53.6, 53.4];
+  const CL = [31.0, 31.9, 33.2, 34.1, 34.8, 35.9, 36.8, 37.5, 37.9, 38.1, 37.7, 36.7, 36.4, 37.8, 39.2, 40.1, 41.3, 42.2, 44.2, 44.6, 46.9, 48.9, 49.2, 49.7, 50.3, 50.4, 50.8, 51.7, 52.4, 52.7, 45.4, 46.6, 50.0, 52.0, 52.8, 52.9];
+
+  const REPORTS = [
+    { n: "1º", d: "mar/24", gap: 19.4, h: null, m: null },
+    { n: "2º", d: "set/24", gap: 20.7, h: 4495.39, m: 3565.48 },
+    { n: "3º", d: "abr/25", gap: 20.9, h: 4745.53, m: 3755.01 },
+    { n: "4º", d: "nov/25", gap: 21.2, h: 4958.43, m: 3908.76 },
+    { n: "5º", d: "abr/26", gap: 21.3, h: 5039.68, m: 3965.94 }
+  ];
+
+  const ENEM_X = [2003, 2005, 2007, 2009, 2011, 2013, 2015];
+  const ENEM_H = [883, 957, 1048, 1107, 1201, 1292, 1306];
+  const ENEM_M = [826, 874, 953, 987, 1043, 1117, 1142];
+
+  /* ================== utilidades ================== */
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, cls, anchor = "start") {
+    const t = el("text", { x, y, class: cls, "text-anchor": anchor }, parent);
+    t.textContent = s;
+    return t;
+  }
+  const num = (v, min = 1, max = min) => v.toLocaleString("pt-BR", { minimumFractionDigits: min, maximumFractionDigits: max });
+  const pct = (v, d = 1) => num(v, d) + "%";
+  const brl = (v, d = 2) => "R$ " + num(v, d);
+
+  // barra com ponta arredondada (4px) e base reta
+  function barPath(x, y, w, h, dir) {
+    const r = Math.min(4, Math.abs(dir === "up" ? h : w) / 2, dir === "up" ? w / 2 : h / 2);
+    if (dir === "up") { // coluna: base em y+h, topo arredondado
+      return `M${x},${y + h} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h} Z`;
+    }
+    // barra horizontal: base em x, ponta direita arredondada
+    return `M${x},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x} Z`;
+  }
+
+  function makeTip(host) {
+    const tip = document.createElement("div");
+    tip.className = "tip";
+    tip.setAttribute("aria-hidden", "true");
+    host.appendChild(tip);
+    return {
+      show(html, x, y) {
+        tip.innerHTML = html;
+        tip.classList.add("show");
+        const w = tip.offsetWidth, h = tip.offsetHeight, W = host.clientWidth;
+        let left = x - w / 2;
+        left = Math.max(0, Math.min(W - w, left));
+        let top = y - h - 12;
+        if (top < -8) top = y + 14;
+        tip.style.transform = `translate(${left}px, ${top}px)`;
+      },
+      hide() { tip.classList.remove("show"); }
+    };
+  }
+  const row = (color, name, val) => `<div class="r"><i style="background:${color}"></i>${name}<em>${val}</em></div>`;
+
+  // monta um gráfico responsivo: redesenha quando a largura muda
+  function responsive(host, draw) {
+    let lastW = 0;
+    const run = (force) => {
+      if (host.hidden) return;
+      const W = Math.round(host.clientWidth);
+      if (!W || (!force && W === lastW)) return;
+      lastW = W;
+      draw(W);
+    };
+    new ResizeObserver(() => run(false)).observe(host);
+    run(true);
+    return { redraw: () => run(true) };
+  }
+
+  /* ================== gráfico de linhas ================== */
+  function lineChart(host, cfg) {
+    const tip = makeTip(host);
+    let svg, idx = -1;
+    return responsive(host, (W) => {
+      if (svg) svg.remove();
+      const H = cfg.height(W);
+      svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cfg.aria });
+      host.insertBefore(svg, host.firstChild);
+      const m = { l: cfg.ml ?? 46, r: cfg.mr ?? 16, t: 18, b: 30 };
+      const iw = W - m.l - m.r, ih = H - m.t - m.b;
+      const n = cfg.x.length;
+      const X = (i) => m.l + (i * iw) / (n - 1);
+      const Y = (v) => m.t + ih * (1 - (v - cfg.yMin) / (cfg.yMax - cfg.yMin));
+
+      for (let v = cfg.yMin; v <= cfg.yMax + 1e-9; v += cfg.yStep) {
+        el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), class: v === cfg.yMin ? "base" : "grid" }, svg);
+        txt(svg, m.l - 8, Y(v) + 4, cfg.yFmt(v), "tick", "end");
+      }
+      const every = W < 560 ? (cfg.xEverySmall || cfg.xEvery) : cfg.xEvery;
+      cfg.x.forEach((x, i) => {
+        if (i % every === 0 || i === n - 1) txt(svg, X(i), H - 8, String(x), "tick", "middle");
+      });
+
+      (cfg.marks || []).forEach((mk) => {
+        const i = cfg.x.indexOf(mk.x);
+        el("line", { x1: X(i), x2: X(i), y1: m.t, y2: m.t + ih, class: "base" }, svg);
+        txt(svg, X(i) - 6, m.t + 12, mk.text, "note", "end");
+      });
+
+      if (cfg.refs && cfg.refs()) {
+        cfg.refs().forEach((r) => {
+          el("line", { x1: m.l, x2: W - m.r, y1: Y(r.value), y2: Y(r.value), stroke: r.color, "stroke-width": 1.5, "stroke-opacity": 0.75 }, svg);
+          const lab = txt(svg, m.l + 8, Y(r.value) + (r.below ? 17 : -7), r.label, "nlabel");
+          lab.setAttribute("font-weight", "700");
+        });
+      }
+
+      cfg.series.forEach((s) => {
+        const d = s.values.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join("");
+        el("path", { d, fill: "none", stroke: s.color, "stroke-width": 2.5, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+      });
+
+      // rótulos de valor seletivos (início ou fim)
+      cfg.series.forEach((s) => {
+        (cfg.labelAt || []).forEach((pos) => {
+          const i = pos === "start" ? 0 : n - 1;
+          el("circle", { cx: X(i), cy: Y(s.values[i]), r: 4.5, fill: s.color, stroke: "var(--surface)", "stroke-width": 2 }, svg);
+          const anchor = pos === "start" ? "start" : "end";
+          const dx = pos === "start" ? 10 : -10;
+          txt(svg, X(i) + dx, Y(s.values[i]) + (s.labelDy ?? -10), cfg.valFmt(s.values[i]), "vlabel", anchor);
+        });
+      });
+
+      // camada de interação
+      const cross = el("line", { y1: m.t, y2: m.t + ih, stroke: "var(--ink-2)", "stroke-width": 1, opacity: 0 }, svg);
+      const dots = cfg.series.map((s) => el("circle", { r: 5, fill: s.color, stroke: "var(--surface)", "stroke-width": 2, opacity: 0 }, svg));
+      const hit = el("rect", { x: m.l - 10, y: m.t, width: iw + 20, height: ih, class: "hit", tabindex: 0, "aria-label": cfg.aria + ". Use as setas para percorrer os valores." }, svg);
+
+      const show = (i) => {
+        idx = Math.max(0, Math.min(n - 1, i));
+        cross.setAttribute("x1", X(idx)); cross.setAttribute("x2", X(idx)); cross.setAttribute("opacity", 0.5);
+        cfg.series.forEach((s, k) => { dots[k].setAttribute("cx", X(idx)); dots[k].setAttribute("cy", Y(s.values[idx])); dots[k].setAttribute("opacity", 1); });
+        const top = Math.min(...cfg.series.map((s) => Y(s.values[idx])));
+        let html = `<b>${cfg.x[idx]}</b>` + cfg.series.map((s) => row(s.color, s.name, cfg.valFmt(s.values[idx]))).join("");
+        if (cfg.extra) html += `<div class="x">${cfg.extra(idx)}</div>`;
+        tip.show(html, X(idx), top);
+      };
+      const hide = () => { cross.setAttribute("opacity", 0); dots.forEach((d) => d.setAttribute("opacity", 0)); tip.hide(); };
+      const fromEvent = (e) => {
+        const r = svg.getBoundingClientRect();
+        return Math.round(((e.clientX - r.left - m.l) / iw) * (n - 1));
+      };
+      hit.addEventListener("pointermove", (e) => show(fromEvent(e)));
+      hit.addEventListener("pointerdown", (e) => show(fromEvent(e)));
+      hit.addEventListener("pointerleave", hide);
+      hit.addEventListener("focus", () => show(idx < 0 ? n - 1 : idx));
+      hit.addEventListener("blur", hide);
+      hit.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault(); e.stopPropagation();
+          show((idx < 0 ? n - 1 : idx) + (e.key === "ArrowRight" ? 1 : -1));
+        }
+      });
+    });
+  }
+
+  /* ================== colunas (vertical) ================== */
+  function columnChart(host, cfg) {
+    const tip = makeTip(host);
+    let svg;
+    return responsive(host, (W) => {
+      if (svg) svg.remove();
+      const H = cfg.height(W);
+      svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cfg.aria });
+      host.insertBefore(svg, host.firstChild);
+      const m = { l: 40, r: 8, t: 26, b: 46 };
+      const iw = W - m.l - m.r, ih = H - m.t - m.b;
+      const n = cfg.cats.length;
+      const Y = (v) => m.t + ih * (1 - v / cfg.yMax);
+      for (let v = 0; v <= cfg.yMax + 1e-9; v += cfg.yStep) {
+        el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), class: v === 0 ? "base" : "grid" }, svg);
+        txt(svg, m.l - 8, Y(v) + 4, cfg.yFmt(v), "tick", "end");
+      }
+      const band = iw / n;
+      const bw = Math.min(cfg.barMax || 40, band * 0.5);
+      cfg.cats.forEach((c, i) => {
+        const cx = m.l + band * (i + 0.5);
+        const v = cfg.values[i];
+        const x = cx - bw / 2, y = Y(v), h = Y(0) - y;
+        const p = el("path", { d: barPath(x, y, bw, h, "up"), fill: cfg.color(i) }, svg);
+        txt(svg, cx, y - 8, cfg.valFmt(v), "vlabel", "middle");
+        txt(svg, cx, H - 26, W < 560 ? c.n : c.n + " relatório", "nlabel", "middle");
+        txt(svg, cx, H - 8, c.d, "tick", "middle");
+        const hit = el("rect", { x: m.l + band * i, y: m.t, width: band, height: ih, class: "hit", tabindex: 0, "aria-label": `${c.n} relatório, ${c.d}: ${cfg.valFmt(v)}` }, svg);
+        const on = () => { p.setAttribute("opacity", 0.85); tip.show(cfg.tip(i), cx, y); };
+        const off = () => { p.setAttribute("opacity", 1); tip.hide(); };
+        hit.addEventListener("pointerenter", on); hit.addEventListener("pointerleave", off);
+        hit.addEventListener("focus", on); hit.addEventListener("blur", off);
+      });
+    });
+  }
+
+  /* ================== barras horizontais agrupadas ================== */
+  function hbarChart(host, cfg) {
+    const tip = makeTip(host);
+    let svg;
+    return responsive(host, (W) => {
+      if (svg) svg.remove();
+      const lw = W < 480 ? 96 : 132; // coluna dos nomes
+      const barH = 24, gap = 10, headH = 30, groupGap = 22;
+      let H = 8;
+      cfg.groups.forEach((g) => { H += headH + g.bars.length * (barH + gap) + groupGap; });
+      H += 14;
+      svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cfg.aria });
+      host.insertBefore(svg, host.firstChild);
+      const x0 = lw, x1 = W - 56;
+      const X = (v) => x0 + ((x1 - x0) * v) / cfg.max;
+      // grade vertical
+      for (let v = 0; v <= cfg.max + 1e-9; v += cfg.step) {
+        el("line", { x1: X(v), x2: X(v), y1: 4, y2: H - 22, class: v === 0 ? "base" : "grid" }, svg);
+        txt(svg, X(v), H - 6, cfg.tickFmt(v), "tick", "middle");
+      }
+      let y = 8;
+      cfg.groups.forEach((g) => {
+        txt(svg, 0, y + 18, g.label, "glabel");
+        if (g.note) txt(svg, x1 + 48, y + 18, g.note, "note", "end");
+        y += headH;
+        g.bars.forEach((b) => {
+          txt(svg, x0 - 10, y + barH / 2 + 5, b.name, "nlabel", "end");
+          const w = X(b.value) - x0;
+          const p = el("path", { d: barPath(x0, y, w, barH, "right"), fill: b.color }, svg);
+          txt(svg, x0 + w + 8, y + barH / 2 + 5, cfg.valFmt(b.value), "vlabel");
+          const yy = y;
+          const hit = el("rect", { x: 0, y: yy - gap / 2, width: W, height: barH + gap, class: "hit", tabindex: 0, "aria-label": `${g.label}, ${b.name}: ${cfg.valFmt(b.value)}` }, svg);
+          const on = () => { p.setAttribute("opacity", 0.85); tip.show(`<b>${g.label}</b>${row(b.color, b.name, cfg.valFmt(b.value))}${b.detail ? `<div class="x">${b.detail}</div>` : ""}`, x0 + w / 2, yy); };
+          const off = () => { p.setAttribute("opacity", 1); tip.hide(); };
+          hit.addEventListener("pointerenter", on); hit.addEventListener("pointerleave", off);
+          hit.addEventListener("focus", on); hit.addEventListener("blur", off);
+          y += barH + gap;
+        });
+        y += groupGap;
+      });
+    });
+  }
+
+  function table(head, rows) {
+    return `<table><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  }
+
+  /* ================== gráficos ================== */
+  // 04 — Brasil: diferença salarial por relatório
+  const brGap = columnChart($("#chart-br-gap"), {
+    aria: "Gráfico de colunas: diferença salarial entre homens e mulheres em cada relatório de transparência salarial, de 19,4% a 21,3%",
+    height: (W) => (W < 520 ? 280 : 320),
+    cats: REPORTS, values: REPORTS.map((r) => r.gap),
+    yMax: 25, yStep: 5, yFmt: (v) => v + "%", valFmt: (v) => pct(v), barMax: 40,
+    color: () => C.mulheres,
+    tip: (i) => {
+      const r = REPORTS[i];
+      let h = `<b>${r.n} relatório · ${r.d}</b>${row(C.mulheres, "Mulheres recebem a menos", pct(r.gap))}`;
+      if (r.h) h += `<div class="x">Homens ${brl(r.h)} · Mulheres ${brl(r.m)}</div>`;
+      return h;
+    }
+  });
+  const R4 = REPORTS.slice(1);
+  let brBrl = null;
+  const makeBrBrl = () => lineChart($("#chart-br-brl"), {
+    aria: "Gráfico de linhas: remuneração média de homens e mulheres do 2º ao 5º relatório",
+    height: (W) => (W < 520 ? 280 : 320),
+    x: R4.map((r) => `${r.n} · ${r.d}`), xEvery: 1,
+    series: [
+      { name: "Homens", color: C.homens, values: R4.map((r) => r.h), labelDy: -10 },
+      { name: "Mulheres", color: C.mulheres, values: R4.map((r) => r.m), labelDy: 20 }
+    ],
+    yMin: 3000, yMax: 5500, yStep: 500, yFmt: (v) => num(v, 0), ml: 52, mr: 30,
+    valFmt: (v) => brl(v, 0), labelAt: ["start", "end"],
+    extra: (i) => `Diferença: ${brl(R4[i].h - R4[i].m)} (${pct(R4[i].gap)})`
+  });
+  $("#tbl-br").innerHTML = table(["Relatório", "Divulgação", "Homens", "Mulheres", "Diferença"],
+    REPORTS.map((r) => [r.n, r.d, r.h ? brl(r.h) : "—", r.m ? brl(r.m) : "—", pct(r.gap)]));
+
+  // 06 — comparação
+  const cmpPart = hbarChart($("#chart-cmp-part"), {
+    aria: "Barras: participação na força de trabalho em 2025. Brasil: mulheres 53,4%, homens 73,4%. Chile: mulheres 52,9%, homens 71,9%",
+    max: 100, step: 25, tickFmt: (v) => v + "%", valFmt: (v) => pct(v),
+    groups: [
+      { label: "Brasil", note: "diferença: 20,0 p.p.", bars: [
+        { name: "Mulheres", value: 53.4, color: C.mulheres },
+        { name: "Homens", value: 73.4, color: C.homens }] },
+      { label: "Chile", note: "diferença: 19,0 p.p.", bars: [
+        { name: "Mulheres", value: 52.9, color: C.mulheres },
+        { name: "Homens", value: 71.9, color: C.homens }] }
+    ]
+  });
+  let cmpSal = null;
+  const makeCmpSal = () => hbarChart($("#chart-cmp-sal"), {
+    aria: "Barras: quanto as mulheres recebem a menos. Brasil, MTE 2026: 21,3%. Chile, PNUD e OIT 2025: 21%. Chile, OCDE 2023: 15,4%",
+    max: 25, step: 5, tickFmt: (v) => v + "%", valFmt: (v) => pct(v, v % 1 ? 1 : 0),
+    groups: [
+      { label: "Brasil", bars: [
+        { name: "MTE (2026)", value: 21.3, color: C.brasil, detail: "Remuneração média, empresas com 100+ empregados" }] },
+      { label: "Chile", bars: [
+        { name: "PNUD/OIT (2025)", value: 21, color: C.chile, detail: "Rendimento mensal médio" },
+        { name: "OCDE (2023)", value: 15.4, color: C.chile, detail: "Salário mediano, trabalho em tempo integral" }] }
+    ]
+  });
+  const tblCmpPart = table(["País", "Mulheres", "Homens", "Diferença"], [["Brasil", "53,4%", "73,4%", "20,0 p.p."], ["Chile", "52,9%", "71,9%", "19,0 p.p."]]);
+  const tblCmpSal = table(["País", "Fonte", "Medida", "Mulheres recebem a menos"], [
+    ["Brasil", "MTE (2026)", "Remuneração média, empresas com 100+ empregados", "21,3%"],
+    ["Chile", "PNUD/OIT (2025)", "Rendimento mensal médio", "21%"],
+    ["Chile", "OCDE (2023)", "Salário mediano, tempo integral", "15,4%"]]);
+  $("#tbl-cmp").innerHTML = tblCmpPart;
+
+  // 07 — série 1990–2025 + medidas
+  const mean = (a) => a.reduce((s, v) => s + v, 0) / a.length;
+  const median = (a) => { const s = [...a].sort((x, y) => x - y), k = s.length / 2; return s.length % 2 ? s[Math.floor(k)] : (s[k - 1] + s[k]) / 2; };
+  const sd = (a) => { const mu = mean(a); return Math.sqrt(a.reduce((s, v) => s + (v - mu) ** 2, 0) / a.length); };
+  const M = {
+    br: { mean: mean(BR), med: median(BR), sd: sd(BR), min: Math.min(...BR), max: Math.max(...BR) },
+    cl: { mean: mean(CL), med: median(CL), sd: sd(CL), min: Math.min(...CL), max: Math.max(...CL) }
+  };
+  const f2 = (v) => num(Math.round(v * 100) / 100, 1, 2);
+  $("#measures-body").innerHTML = [
+    ["Média", f2(M.br.mean) + "%", f2(M.cl.mean) + "%"],
+    ["Mediana", f2(M.br.med) + "%", f2(M.cl.med) + "%"],
+    ["Desvio padrão", f2(M.br.sd) + " p.p.", f2(M.cl.sd) + " p.p."],
+    ["Amplitude", `${f2(M.br.max - M.br.min)} p.p.`, `${f2(M.cl.max - M.cl.min)} p.p.`]
+  ].map((r) => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("");
+  $("#insight").innerHTML = `O desvio padrão do Chile (${f2(M.cl.sd)}) é cerca do dobro do brasileiro (${f2(M.br.sd)}): os valores chilenos ficam mais espalhados em torno da média porque a participação das chilenas subiu muito no período, de ${pct(CL[0])} para ${pct(CL[35])}. No Brasil, foi de ${pct(BR[0])} para ${pct(BR[35])}.`;
+
+  let showMean = false;
+  const serie = lineChart($("#chart-serie"), {
+    aria: "Gráfico de linhas: taxa de participação feminina de 1990 a 2025. Brasil passou de 44,4% para 53,4%; Chile, de 31,0% para 52,9%",
+    height: (W) => (W < 520 ? 300 : 380),
+    x: YEARS, xEvery: 5, xEverySmall: 10,
+    series: [
+      { name: "Brasil", color: C.brasil, values: BR, labelDy: -10 },
+      { name: "Chile", color: C.chile, values: CL, labelDy: 20 }
+    ],
+    yMin: 25, yMax: 60, yStep: 5, yFmt: (v) => v + "%",
+    valFmt: (v) => pct(v), labelAt: ["start"],
+    marks: [{ x: 2020, text: "Pandemia" }],
+    refs: () => showMean ? [
+      { value: M.br.mean, color: C.brasil, label: "Média Brasil: " + f2(M.br.mean) + "%" },
+      { value: M.cl.mean, color: C.chile, label: "Média Chile: " + f2(M.cl.mean) + "%", below: true }
+    ] : null,
+    extra: (i) => `Diferença: ${num(Math.abs(BR[i] - CL[i]), 1)} p.p.`
+  });
+  $("#toggle-mean").addEventListener("click", (e) => {
+    showMean = !showMean;
+    e.currentTarget.setAttribute("aria-pressed", showMean);
+    e.currentTarget.textContent = showMean ? "Esconder médias" : "Mostrar médias";
+    serie.redraw();
+  });
+  $("#tbl-serie").innerHTML = table(["Ano", "Brasil", "Chile"], YEARS.map((y, i) => [y, pct(BR[i]), pct(CL[i])]));
+
+  // 08 — ENEM
+  lineChart($("#chart-enem"), {
+    aria: "Gráfico de linhas da questão: salário de contratação de homens e mulheres de 2003 a 2015",
+    height: (W) => (W < 520 ? 250 : 280),
+    x: ENEM_X, xEvery: 1,
+    series: [
+      { name: "Homens", color: C.homens, values: ENEM_H, labelDy: -10 },
+      { name: "Mulheres", color: C.mulheres, values: ENEM_M, labelDy: 20 }
+    ],
+    yMin: 700, yMax: 1400, yStep: 100, yFmt: (v) => num(v, 0), ml: 48, mr: 12,
+    valFmt: (v) => num(v, 0), labelAt: ["end"],
+    extra: (i) => `Diferença: ${ENEM_H[i] - ENEM_M[i]}`
+  });
+  $("#enem-body").innerHTML = ENEM_X.map((y, i) => `<tr><td>${y}</td><td>${num(ENEM_H[i], 0)}</td><td>${num(ENEM_M[i], 0)}</td><td>${ENEM_H[i] - ENEM_M[i]}</td></tr>`).join("") +
+    `<tr class="total"><td>Soma</td><td></td><td></td><td>852</td></tr>`;
+
+  /* ================== alternâncias ================== */
+  // Brasil: % / R$
+  $$("#salarios .seg button").forEach((b) => b.addEventListener("click", () => {
+    const v = b.dataset.view;
+    $$("#salarios .seg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    $("#chart-br-gap").hidden = v !== "gap";
+    $("#chart-br-brl").hidden = v !== "brl";
+    $("#br-legend").hidden = v !== "brl";
+    $("#br-title").textContent = v === "gap" ? "Diferença salarial entre homens e mulheres" : "Remuneração média de homens e mulheres";
+    $("#br-sub").textContent = v === "gap" ? "Quanto as mulheres recebem a menos, em %, em cada relatório" : "Em reais, do 2º ao 5º relatório";
+    if (v === "brl") { brBrl ? brBrl.redraw() : (brBrl = makeBrBrl()); } else brGap.redraw();
+  }));
+  // Comparação: participação / salários
+  $$("#comparacao .seg button").forEach((b) => b.addEventListener("click", () => {
+    const v = b.dataset.view;
+    $$("#comparacao .seg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    $("#chart-cmp-part").hidden = v !== "part";
+    $("#chart-cmp-sal").hidden = v !== "sal";
+    $("#cmp-legend-part").hidden = v !== "part";
+    $("#cmp-legend-sal").hidden = v !== "sal";
+    $("#cmp-title").textContent = v === "part" ? "Participação na força de trabalho (2025)" : "Quanto as mulheres recebem a menos";
+    $("#cmp-sub").textContent = v === "part" ? "% da população de 15 anos ou mais que trabalha ou procura trabalho" : "Diferença salarial em relação aos homens, segundo cada fonte";
+    $("#cmp-cap").textContent = v === "part"
+      ? "Estimativas modeladas da OIT, publicadas pelo Banco Mundial. A diferença em pontos percentuais (p.p.) é a taxa dos homens menos a das mulheres."
+      : "Atenção: cada fonte mede de um jeito (média, mediana, só empresas grandes ou todos os trabalhadores), então a comparação é aproximada.";
+    $("#tbl-cmp").innerHTML = v === "part" ? tblCmpPart : tblCmpSal;
+    if (v === "sal") { cmpSal ? cmpSal.redraw() : (cmpSal = makeCmpSal()); } else cmpPart.redraw();
+  }));
+  // tabelas
+  $$(".datatoggle[data-table]").forEach((b) => b.addEventListener("click", () => {
+    const box = document.getElementById(b.dataset.table);
+    box.hidden = !box.hidden;
+    b.textContent = box.hidden ? b.textContent.replace("Esconder", "Ver") : b.textContent.replace("Ver", "Esconder");
+  }));
+
+  /* ================== linha do tempo ================== */
+  const TL = [
+    { p: ["Durante muito tempo, a sociedade atribuía às mulheres principalmente as responsabilidades domésticas e os cuidados com os filhos, enquanto os homens eram considerados os principais responsáveis pelo sustento financeiro da família. Apesar disso, as mulheres sempre trabalharam, especialmente na agricultura, na produção artesanal, na costura e nos serviços domésticos, embora muitas dessas atividades não fossem reconhecidas ou valorizadas como trabalho."] },
+    { p: ["Com a Revolução Industrial, a partir do século XVIII, as mulheres passaram a ocupar mais espaços nas fábricas, principalmente em atividades que ofereciam salários inferiores aos dos homens e condições de trabalho precárias. No Brasil, a industrialização também contribuiu para ampliar a presença feminina no trabalho remunerado, especialmente nas primeiras décadas do século XX. Entretanto, a participação das mulheres ainda enfrentava muitas limitações, como a discriminação, a desigualdade salarial e a falta de reconhecimento profissional."] },
+    { p: ["Ao longo do século XX, principalmente a partir da década de 1970, a presença feminina no mercado de trabalho brasileiro cresceu significativamente. Esse avanço foi impulsionado pela ampliação do acesso à educação, pelas transformações sociais, pela luta dos movimentos feministas e pela busca de independência financeira. Outro marco importante foi a Constituição Federal de 1988, que estabeleceu a igualdade de direitos e deveres entre homens e mulheres e fortaleceu a proteção dos direitos trabalhistas femininos."],
+      extra: `<div class="law"><b>Constituição de 1988 · art. 5º, I</b>“Homens e mulheres são iguais em direitos e obrigações, nos termos desta Constituição.”</div>` },
+    { p: ["Apesar dessas conquistas, a entrada das mulheres no mercado de trabalho não significou o fim das desigualdades. Até hoje, elas enfrentam dificuldades como diferenças salariais, menor presença em cargos de liderança, discriminação e a sobrecarga de conciliar o trabalho remunerado com as responsabilidades domésticas."] }
+  ];
+  const tabs = $$(".timeline button");
+  let step = 0;
+  function setStep(i) {
+    step = Math.max(0, Math.min(TL.length - 1, i));
+    tabs.forEach((t, k) => { t.setAttribute("aria-selected", k === step); t.tabIndex = k === step ? 0 : -1; });
+    $("#tl-panel").setAttribute("aria-labelledby", "tl-" + step);
+    $("#tl-text").innerHTML = TL[step].p.map((p) => `<p>${p}</p>`).join("");
+    $("#tl-num").textContent = `${step + 1}/${TL.length}`;
+    $("#tl-extra").innerHTML = TL[step].extra || "";
+    $("#tl-prev").disabled = step === 0;
+    $("#tl-next").disabled = step === TL.length - 1;
+  }
+  tabs.forEach((t) => {
+    t.addEventListener("click", () => setStep(+t.dataset.step));
+    t.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault(); e.stopPropagation();
+        setStep(step + (e.key === "ArrowRight" ? 1 : -1));
+        tabs[step].focus();
+      }
+    });
+  });
+  $("#tl-prev").addEventListener("click", () => setStep(step - 1));
+  $("#tl-next").addEventListener("click", () => setStep(step + 1));
+  setStep(0);
+
+  /* ================== ENEM: alternativas ================== */
+  const alts = $$("#alts .opt");
+  const revealResol = () => { $("#resol").hidden = false; $("#show-resol").hidden = true; };
+  alts.forEach((a) => a.addEventListener("click", () => {
+    alts.forEach((x) => { x.classList.remove("wrong"); x.querySelector(".verdict").textContent = ""; });
+    if (a.dataset.ok) {
+      a.classList.add("right"); a.querySelector(".verdict").textContent = "✓ Correta";
+      revealResol();
+    } else {
+      a.classList.add("wrong"); a.querySelector(".verdict").textContent = "✕ Tente de novo";
+    }
+  }));
+  $("#show-resol").addEventListener("click", () => {
+    const ok = $("#alts .opt[data-ok]");
+    ok.classList.add("right"); ok.querySelector(".verdict").textContent = "✓ Correta";
+    revealResol();
+  });
+
+  /* ================== navegação de apresentação ================== */
+  const slides = $$(".slide");
+  const dots = $("#dots");
+  slides.forEach((s, i) => {
+    const a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.setAttribute("aria-label", s.dataset.label);
+    a.innerHTML = `<span>${s.dataset.label}</span>`;
+    a.addEventListener("click", (e) => { e.preventDefault(); go(i); });
+    dots.appendChild(a);
+  });
+  const dotLinks = $$("a", dots);
+  const pad = (n) => String(n).padStart(2, "0");
+  function current() {
+    const mid = window.innerHeight * 0.4;
+    let cur = 0;
+    slides.forEach((s, i) => { if (s.getBoundingClientRect().top <= mid) cur = i; });
+    return cur;
+  }
+  function go(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides[i].scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
+  // em telas mais altas que a janela, avança dentro da própria seção antes de pular
+  const smooth = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+  function stepNext() {
+    const i = current(), r = slides[i].getBoundingClientRect();
+    if (r.bottom > window.innerHeight + 40) window.scrollBy({ top: Math.min(r.bottom - window.innerHeight, window.innerHeight * 0.8), behavior: smooth() });
+    else go(i + 1);
+  }
+  function stepPrev() {
+    const i = current(), r = slides[i].getBoundingClientRect();
+    if (r.top < -40) window.scrollBy({ top: -Math.min(-r.top, window.innerHeight * 0.8), behavior: smooth() });
+    else go(i - 1);
+  }
+  function onScroll() {
+    const i = current();
+    dotLinks.forEach((d, k) => d.classList.toggle("on", k === i));
+    $("#counter").textContent = `${pad(i + 1)} / ${pad(slides.length)}`;
+    document.body.classList.toggle("on-dark", slides[i].classList.contains("dark"));
+    if (i > 0) hideHint();
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    $("#progress").style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + "%";
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  onScroll();
+
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.matches("input, textarea, select") || t.isContentEditable)) return;
+    const onControl = t && t.matches && t.matches("button, summary, a, [role=tab]");
+    const next = ["ArrowDown", "ArrowRight", "PageDown"].includes(e.key) || (e.key === " " && !onControl);
+    const prev = ["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key);
+    if (next) { e.preventDefault(); stepNext(); hideHint(); }
+    else if (prev) { e.preventDefault(); stepPrev(); hideHint(); }
+    else if (e.key === "Home") { e.preventDefault(); go(0); }
+    else if (e.key === "End") { e.preventDefault(); go(slides.length - 1); }
+  });
+  $$("[data-go]").forEach((b) => b.addEventListener("click", () => go(+b.dataset.go)));
+  let hintTimer = setTimeout(hideHint, 9000);
+  function hideHint() { clearTimeout(hintTimer); $("#hint").style.opacity = 0; }
+
+  const toast = (msg) => { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 3200); };
+  $("#fs").addEventListener("click", async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch (err) {
+      toast("O navegador não liberou a tela cheia aqui. Aperte F11 para usar.");
+    }
+  });
+  document.addEventListener("fullscreenchange", () => {
+    $("#fs").textContent = document.fullscreenElement ? "Sair da tela cheia" : "Tela cheia";
+  });
+})();
+</script>
+</body>
+</html>
